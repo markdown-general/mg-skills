@@ -18,7 +18,7 @@ Automate conversations with web-based AI chat systems (Grok, Claude.ai, etc.) vi
 ### 1. Ensure Chrome is running with remote debugging
 
 ```bash
-./browser-launch.sh
+./chat-launch.sh
 ```
 
 Opens Chrome with a persistent debug profile at `~/chrome-debug-profile`. Waits for CDP port to be ready.
@@ -54,7 +54,7 @@ Health check runs automatically (non-blocking) at the start of each chat-with-ch
 
 ## Configuration
 
-**browser-tools.conf** defines selector rules for each system:
+**chat-tools.conf** defines selector rules for each system:
 
 ```ini
 [grok]
@@ -72,7 +72,7 @@ message_bubble_class=[data-testid="assistant"]
 response_timeout=15
 ```
 
-**To add a new system**, edit `browser-tools.conf` with five fields per system (name, url_pattern, input_selector, send_button_selector, message_bubble_class, response_timeout). No script editing required.
+**To add a new system**, edit `chat-tools.conf` with five fields per system (name, url_pattern, input_selector, send_button_selector, message_bubble_class, response_timeout). No script editing required.
 
 ## Architecture
 
@@ -144,7 +144,7 @@ On error, lists all open tabs for recovery.
 ### Chrome not running?
 
 ```bash
-./browser-launch.sh
+./chat-launch.sh
 ```
 
 Launches Chrome daemon on :9222 with persistent debug profile. Can be backgrounded.
@@ -163,9 +163,9 @@ Health check will warn if a login page is detected. Log in to the system in Chro
 
 ### Input field not found?
 
-Verify CSS selector in browser-tools.conf matches current DOM. Use browser DevTools inspector (Cmd+Option+I) to find the exact selector.
+Verify CSS selector in chat-tools.conf matches current DOM. Use browser DevTools inspector (Cmd+Option+I) to find the exact selector.
 
-Update browser-tools.conf and test:
+Update chat-tools.conf and test:
 
 ```bash
 ./chat-with-chat.sh <system> "test"
@@ -173,7 +173,7 @@ Update browser-tools.conf and test:
 
 ### Response extraction stuck?
 
-- Increase `response_timeout` in browser-tools.conf
+- Increase `response_timeout` in chat-tools.conf
 - Verify bubble selector is correct in DevTools
 - Check audit log: `tail ~/mg/logs/browser-chat-audit.log`
 
@@ -184,10 +184,10 @@ Update browser-tools.conf and test:
 - **chat-send.sh** — Generic send (81 lines, config-driven)
 - **chat-wait.sh** — Generic wait/extract (74 lines, config-driven)
 - **chat-ensure-tab.js** — Tab verification (98 lines, JSON output)
-- **browser-launch.sh** — Chrome launcher (31 lines, macOS/Linux)
+- **chat-launch.sh** — Chrome launcher (31 lines, macOS/Linux)
 - **chat-upload.js** — File upload utility (32 lines)
 - **chat-attach-file.js** — File attach protocol (23 lines)
-- **browser-tools.conf** — Selector library (15 lines, INI format)
+- **chat-tools.conf** — Selector library (15 lines, INI format)
 
 ## Testing
 
