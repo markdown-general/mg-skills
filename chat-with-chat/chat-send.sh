@@ -1,6 +1,6 @@
 #!/bin/bash
-# robust-send.sh — Generic send for any AI system via config
-# Usage: ./robust-send.sh <system> <message-file>
+# chat-send.sh — Generic send for any AI system via config
+# Usage: ./chat-send.sh <system> <message-file>
 # Systems: grok, claude
 
 set -euo pipefail
@@ -36,7 +36,7 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] SEND START → $SYSTEM" | tee -a "$AUDIT_LO
 # 1. Ensure correct tab
 echo "Ensuring $SYSTEM tab..."
 DOMAIN=$([ "$SYSTEM" = "grok" ] && echo "grok.com" || echo "claude.ai")
-TAB_INFO=$("$SCRIPT_DIR/browser-ensure-tab.js" "$DOMAIN")
+TAB_INFO=$("$SCRIPT_DIR/chat-ensure-tab.js" "$DOMAIN")
 TAB_INDEX=$(echo "$TAB_INFO" | jq -r '.tabIndex // .index // -1')
 
 if [ "$TAB_INDEX" = "-1" ]; then

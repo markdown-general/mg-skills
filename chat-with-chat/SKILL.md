@@ -30,8 +30,8 @@ Open Chrome and navigate to Grok (https://grok.com) or Claude.ai (https://claude
 ### 3. Send a prompt and get the response
 
 ```bash
-./ai-chat.sh grok "What is markdown?"
-./ai-chat.sh claude "Explain closures in JavaScript"
+./chat-with-chat.sh grok "What is markdown?"
+./chat-with-chat.sh claude "Explain closures in JavaScript"
 ```
 
 Output: AI system's latest response to stdout. Logs all operations to `~/mg/logs/browser-chat-audit.log`.
@@ -65,24 +65,24 @@ response_timeout=15
 Main dispatcher. Signature:
 
 ```bash
-./ai-chat.sh <system> "<prompt>"
+./chat-with-chat.sh <system> "<prompt>"
 ```
 
 - Validates Chrome is running
 - Ensures correct tab is in focus
-- Calls robust-send.sh and robust-wait.sh
+- Calls chat-send.sh and chat-wait.sh
 - Returns response to stdout
 
-### robust-send.sh
+### chat-send.sh
 
 Generic send operation. Reads config, pastes text into input field, clicks send button.
 
-- Handles tab switching via browser-ensure-tab.js
+- Handles tab switching via chat-ensure-tab.js
 - Verifies DOM elements exist before interaction
 - Anti-spiral safeguards (max 3 retries on input focus)
 - Audit logged
 
-### robust-wait.sh
+### chat-wait.sh
 
 Generic wait/extract operation. Reads config, polls for new message, extracts last bubble.
 
@@ -91,12 +91,12 @@ Generic wait/extract operation. Reads config, polls for new message, extracts la
 - Extracts last `.message-bubble` only (clean, no page cruft)
 - Returns extracted text to stdout
 
-### browser-ensure-tab.js
+### chat-ensure-tab.js
 
 Tab verification utility. Finds and switches to a tab by URL pattern.
 
 ```bash
-./browser-ensure-tab.js "grok.com"
+./chat-ensure-tab.js "grok.com"
 ```
 
 Returns JSON:
@@ -123,7 +123,7 @@ curl http://localhost:9222/json/list | jq '.[] | {title, url}'
 
 **Tab not found?**
 ```bash
-./browser-ensure-tab.js "grok.com"  # Lists all tabs if not found
+./chat-ensure-tab.js "grok.com"  # Lists all tabs if not found
 ```
 
 **Response extraction stuck?**
@@ -135,33 +135,57 @@ curl http://localhost:9222/json/list | jq '.[] | {title, url}'
 - Open browser DevTools (Cmd+Option+I)
 - Find input field with Inspector
 - Copy exact CSS path
-- Update browser-tools.conf and test `./ai-chat.sh <system> "test"`
+- Update browser-tools.conf and test `./chat-with-chat.sh <system> "test"`
 
 ## Files
 
-- **ai-chat.sh** — Main dispatcher (51 lines)
-- **robust-send.sh** — Generic send (81 lines, config-driven)
-- **robust-wait.sh** — Generic wait/extract (74 lines, config-driven)
-- **browser-ensure-tab.js** — Tab verification (98 lines, JSON output)
+- **chat-with-chat.sh** — Main dispatcher (51 lines)
+- **chat-send.sh** — Generic send (81 lines, config-driven)
+- **chat-wait.sh** — Generic wait/extract (74 lines, config-driven)
+- **chat-ensure-tab.js** — Tab verification (98 lines, JSON output)
 - **browser-launch.sh** — Chrome launcher (31 lines, macOS/Linux)
+- **chat-upload.js** — File upload utility (32 lines)
+- **chat-attach-file.js** — File attach protocol (23 lines)
 - **browser-tools.conf** — Selector library (15 lines, INI format)
-- **chat-with-grok.sh** — Grok convenience wrapper (46 lines, reference only)
 
 ## Testing
 
 ```bash
 # Single turn
-./ai-chat.sh grok "What is a closure?"
+./chat-with-chat.sh grok "What is a closure?"
 
 # Multi-turn (same tab, context preserved)
-./ai-chat.sh grok "Explain in simpler terms"
-./ai-chat.sh grok "Give me an example"
+./chat-with-chat.sh grok "Explain in simpler terms"
+./chat-with-chat.sh grok "Give me an example"
 
 # Different system
-./ai-chat.sh claude "Summarize the above"
+./chat-with-chat.sh claude "Summarize the above"
 ```
+
+## Anti-Spiral Safeguards
+
+| Failure Mode          | Old Behavior          | New Behavior                              |
+|-----------------------|-----------------------|-------------------------------------------|
+| Wrong tab             | Silent wrong action   | `browser-ensure-tab` fails fast with tab list |
+| Element not found     | JS error / hang       | Explicit error + screenshot + retry       |
+| Send button missing   | Click does nothing    | Pre-check + wait for button to appear     |
+| Mid-stream read       | Truncated response    | Poll until streaming=false                |
+| Agent forgets check   | Spiral                | Make every card operation start with ensure |
+
+**Audit Logging:** Every operation appends to `~/mg/logs/browser-chat-audit.log`:
+```
+2026-04-30T16:27:00Z | ensure-grok | tab=2 | ok
+2026-04-30T16:27:03Z | send-to-grok | 142 chars | success
+2026-04-30T16:27:12Z | wait-for-grok | 18s | complete
+```
+
+## Future Hardening (Roadmap)
+
+- Vision fallback: on selector fail, screenshot + vision model to describe UI and suggest new selector
+- Auto-update selectors: periodic browser-pick.js run + diff against known good
+- Session persistence: save tab IDs + restore after Chrome restart
+- Rate-limit awareness: detect "slow down" banners and back off
 
 ## References
 
-- **browser-chat-robust.md** — Hardening principles and anti-spiral design
 - **pi-skills** (github.com/badlogic/pi-skills) — Upstream generic browser tools (not replicated here)

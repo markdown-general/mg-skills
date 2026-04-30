@@ -1,8 +1,8 @@
 #!/bin/bash
-# ai-chat.sh — One command for any AI system
-# Usage: ./ai-chat.sh <system> <prompt>
-#        ./ai-chat.sh grok "What is X?"
-#        ./ai-chat.sh claude "Explain Y"
+# chat-with-chat.sh — One command for any AI system
+# Usage: ./chat-with-chat.sh <system> <prompt>
+#        ./chat-with-chat.sh grok "What is X?"
+#        ./chat-with-chat.sh claude "Explain Y"
 
 set -euo pipefail
 
@@ -33,11 +33,11 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] CHAT START → $SYSTEM" | tee -a "$AUDIT_LO
 
 # 2. Send message
 echo "Sending to $SYSTEM..."
-./robust-send.sh "$SYSTEM" "$PROMPT_FILE"
+./chat-send.sh "$SYSTEM" "$PROMPT_FILE"
 
 # 3. Wait for response
 RESPONSE_FILE="$HOME/mg/logs/${SYSTEM}-response-$TIMESTAMP.txt"
-./robust-wait.sh "$SYSTEM" "$RESPONSE_FILE"
+./chat-wait.sh "$SYSTEM" "$RESPONSE_FILE"
 
 # 4. Output clean response
 echo "────────────────────────────────────────"

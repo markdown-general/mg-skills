@@ -1,6 +1,6 @@
 #!/bin/bash
-# robust-wait.sh — Generic wait + extract for any AI system via config
-# Usage: ./robust-wait.sh <system> <output-file>
+# chat-wait.sh — Generic wait + extract for any AI system via config
+# Usage: ./chat-wait.sh <system> <output-file>
 # Systems: grok, claude
 
 set -euo pipefail
