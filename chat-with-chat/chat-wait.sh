@@ -46,24 +46,42 @@ for ((i=0; i<TIMEOUT/INTERVAL; i++)); do
   " 2>/dev/null || echo "false")
 
   if [ "$STREAMING" = "false" ]; then
-    echo "✅ Response complete — extracting last bubble only"
+    echo "✅ Response complete — extracting full rich response"
 
-    # Extract ONLY the last message
-    "$SCRIPT_DIR/browser-eval.js" "
+    # Extract full HTML from .standard-markdown div within the last response
+    HTML_OUTPUT=$("$SCRIPT_DIR/browser-eval.js" "
       (function() {
         var bubbles = Array.from(document.querySelectorAll('$BUBBLE_CLASS'));
         var lastMsg = bubbles[bubbles.length - 1];
-        // Fallback: skip very short user messages if needed
+        
+        // Skip very short messages (likely user echo)
         if (lastMsg && lastMsg.innerText.length < 50) {
           lastMsg = bubbles[bubbles.length - 2];
         }
-        return lastMsg ? lastMsg.innerText.trim() : 'No message found';
+        
+        if (!lastMsg) return 'No message found';
+        
+        // Try to find .standard-markdown div for rich formatting
+        var richContent = lastMsg.querySelector('.standard-markdown');
+        if (richContent) {
+          return richContent.innerHTML;
+        }
+        
+        // Fallback: return plain text
+        return lastMsg.innerText.trim();
       })()
-    " > "$OUTPUT_FILE"
+    ")
+    
+    # Convert HTML to markdown if pandoc is available
+    if command -v pandoc &> /dev/null && [ "$HTML_OUTPUT" != "No message found" ]; then
+      echo "$HTML_OUTPUT" | pandoc -f html -t markdown > "$OUTPUT_FILE"
+    else
+      echo "$HTML_OUTPUT" > "$OUTPUT_FILE"
+    fi
 
     cp "$OUTPUT_FILE" "$HOME/mg/logs/${SYSTEM}-response-$(date +%s).txt"
 
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] WAIT COMPLETE — last bubble saved" | tee -a "$AUDIT_LOG"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] WAIT COMPLETE — full response saved" | tee -a "$AUDIT_LOG"
     exit 0
   fi
 

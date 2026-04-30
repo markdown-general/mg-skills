@@ -15,13 +15,15 @@ Automate conversations with web-based AI chat systems (Grok, Claude.ai, etc.) vi
 
 ## Quick Start
 
-### 1. Ensure Chrome is running with remote debugging
+### 1. Ensure Chrome is running with remote debugging on :9222
+
+⚠️ **IMPORTANT:** This tool requires the **:9222 Chrome instance** (launched by `./chat-launch.sh`). Do NOT use your personal Chrome or other Chrome windows. Many Chrome instances may be open — verify you're using the correct one.
 
 ```bash
 ./chat-launch.sh
 ```
 
-Opens Chrome with a persistent debug profile at `~/chrome-debug-profile`. Waits for CDP port to be ready.
+Opens Chrome with a persistent debug profile at `~/chrome-debug-profile`. Waits for CDP port `:9222` to be ready. This is the **only** Chrome instance this tool can reach.
 
 ### 2. Navigate to your chat system
 
@@ -185,8 +187,7 @@ Update chat-tools.conf and test:
 - **chat-wait.sh** — Generic wait/extract (74 lines, config-driven)
 - **chat-ensure-tab.js** — Tab verification (98 lines, JSON output)
 - **chat-launch.sh** — Chrome launcher (31 lines, macOS/Linux)
-- **chat-upload.js** — File upload utility (32 lines)
-- **chat-attach-file.js** — File attach protocol (23 lines)
+- **chat-upload.js** — File upload utility (32 lines, multi-file capable)
 - **chat-tools.conf** — Selector library (15 lines, INI format)
 
 ## Testing
@@ -201,6 +202,11 @@ Update chat-tools.conf and test:
 
 # Different system
 ./chat-with-chat.sh claude "Summarize the above"
+
+# File upload (before send)
+./chat-upload.js ~/path/to/file1.md ~/path/to/file2.md
+# Then send normally:
+./chat-with-chat.sh claude "Analyze these files"
 ```
 
 ## Anti-Spiral Safeguards

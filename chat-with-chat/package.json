@@ -1,0 +1,9 @@
+{
+  "name": "chat-with-chat",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Config-driven multi-system web chat automation",
+  "dependencies": {
+    "puppeteer-core": "^22.0.0"
+  }
+}
