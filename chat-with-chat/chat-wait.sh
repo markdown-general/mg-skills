@@ -49,28 +49,32 @@ for ((i=0; i<TIMEOUT/INTERVAL; i++)); do
     echo "✅ Response complete — extracting full rich response"
 
     # Extract full HTML from .standard-markdown div within the last response
-    HTML_OUTPUT=$("$SCRIPT_DIR/browser-eval.js" "
-      (function() {
-        var bubbles = Array.from(document.querySelectorAll('$BUBBLE_CLASS'));
-        var lastMsg = bubbles[bubbles.length - 1];
+    HTML_OUTPUT=$(cd "$SCRIPT_DIR" && node -e "
+      (async () => {
+        const puppeteer = require('puppeteer-core');
+        const browser = await puppeteer.connect({ browserWSEndpoint: 'http://localhost:9222' });
+        const page = (await browser.pages())[0];
         
-        // Skip very short messages (likely user echo)
-        if (lastMsg && lastMsg.innerText.length < 50) {
-          lastMsg = bubbles[bubbles.length - 2];
-        }
+        const html = await page.evaluate(() => {
+          // Find all .font-claude-response divs (the container for Claude's responses)
+          const responseContainers = Array.from(document.querySelectorAll('.font-claude-response'));
+          const lastContainer = responseContainers[responseContainers.length - 1];
+          
+          if (!lastContainer) return 'No message found';
+          
+          // Get the .standard-markdown div inside this container
+          const richContent = lastContainer.querySelector('.standard-markdown');
+          if (richContent) {
+            return richContent.innerHTML;
+          }
+          
+          return lastContainer.innerText.trim();
+        });
         
-        if (!lastMsg) return 'No message found';
-        
-        // Try to find .standard-markdown div for rich formatting
-        var richContent = lastMsg.querySelector('.standard-markdown');
-        if (richContent) {
-          return richContent.innerHTML;
-        }
-        
-        // Fallback: return plain text
-        return lastMsg.innerText.trim();
-      })()
-    ")
+        console.log(html);
+        await browser.disconnect();
+      })();
+    " 2>/dev/null || echo "Extraction failed")
     
     # Convert HTML to markdown if pandoc is available
     if command -v pandoc &> /dev/null && [ "$HTML_OUTPUT" != "No message found" ]; then
