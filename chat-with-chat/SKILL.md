@@ -15,7 +15,7 @@ Automate conversations with web-based AI chat systems (Grok, Claude.ai, etc.) vi
 
 ## Quick Start
 
-### 1. Launch Chrome with Remote Debugging
+### 1. Ensure Chrome is running with remote debugging
 
 ```bash
 ./browser-launch.sh
@@ -25,9 +25,23 @@ Opens Chrome with a persistent debug profile at `~/chrome-debug-profile`. Waits 
 
 ### 2. Navigate to your chat system
 
-Open Chrome and navigate to Grok (https://grok.com) or Claude.ai (https://claude.ai). Keep the tab open.
+Open Chrome and navigate to Grok (https://grok.com) or Claude.ai (https://claude.ai). Log in with your credentials. Keep the tab open.
 
-### 3. Send a prompt and get the response
+### 3. Check health before chatting (optional)
+
+```bash
+./chat-health-check.sh grok
+./chat-health-check.sh claude
+./chat-health-check.sh                # Check all systems
+```
+
+Reports:
+- Chrome CDP connectivity
+- Open tabs
+- Login status for each system
+- Input field availability
+
+### 4. Send a prompt and get the response
 
 ```bash
 ./chat-with-chat.sh grok "What is markdown?"
@@ -35,6 +49,8 @@ Open Chrome and navigate to Grok (https://grok.com) or Claude.ai (https://claude
 ```
 
 Output: AI system's latest response to stdout. Logs all operations to `~/mg/logs/browser-chat-audit.log`.
+
+Health check runs automatically (non-blocking) at the start of each chat-with-chat command.
 
 ## Configuration
 
@@ -60,7 +76,7 @@ response_timeout=15
 
 ## Architecture
 
-### ai-chat.sh
+### chat-with-chat.sh
 
 Main dispatcher. Signature:
 
@@ -68,10 +84,27 @@ Main dispatcher. Signature:
 ./chat-with-chat.sh <system> "<prompt>"
 ```
 
-- Validates Chrome is running
+- Runs health check (optional, non-blocking; warns if issues found)
 - Ensures correct tab is in focus
 - Calls chat-send.sh and chat-wait.sh
 - Returns response to stdout
+
+### chat-health-check.sh
+
+Precondition verifier. Checks:
+- CDP connectivity on :9222
+- Tab exists for system (by URL pattern)
+- Login screen detection
+- Input field availability
+
+Usage:
+
+```bash
+./chat-health-check.sh grok
+./chat-health-check.sh              # All systems
+```
+
+Returns exit code 0 if all checks pass, 1 if issues found. Recommended to run explicitly before debugging problems.
 
 ### chat-send.sh
 
@@ -106,40 +139,48 @@ Returns JSON:
 
 On error, lists all open tabs for recovery.
 
-## Pitfalls
+## Pitfalls & Troubleshooting
 
-1. **Input field not found**: Verify CSS selector in browser-tools.conf matches current DOM. Use browser DevTools inspector.
-2. **"Max retries on input focus"**: Tab lost focus during paste; usually transient. Retry command.
-3. **Response extraction empty**: New chat system may use different bubble class. Inspect DevTools, update browser-tools.conf.
-4. **Chrome port unresponsive**: Ensure `./browser-launch.sh` was run and Chrome is open. Check `curl http://localhost:9222/json/list`.
+### Chrome not running?
 
-## Troubleshooting
-
-**Chrome not running?**
 ```bash
 ./browser-launch.sh
-curl http://localhost:9222/json/list | jq '.[] | {title, url}'
 ```
 
-**Tab not found?**
+Launches Chrome daemon on :9222 with persistent debug profile. Can be backgrounded.
+
+### Tab not found?
+
 ```bash
-./chat-ensure-tab.js "grok.com"  # Lists all tabs if not found
+./chat-health-check.sh grok      # Lists all open tabs
 ```
 
-**Response extraction stuck?**
+Fix: Open https://grok.com in Chrome and stay on that tab. You must be logged in.
+
+### Login screen detected?
+
+Health check will warn if a login page is detected. Log in to the system in Chrome, then retry.
+
+### Input field not found?
+
+Verify CSS selector in browser-tools.conf matches current DOM. Use browser DevTools inspector (Cmd+Option+I) to find the exact selector.
+
+Update browser-tools.conf and test:
+
+```bash
+./chat-with-chat.sh <system> "test"
+```
+
+### Response extraction stuck?
+
 - Increase `response_timeout` in browser-tools.conf
 - Verify bubble selector is correct in DevTools
 - Check audit log: `tail ~/mg/logs/browser-chat-audit.log`
 
-**Selector not working?**
-- Open browser DevTools (Cmd+Option+I)
-- Find input field with Inspector
-- Copy exact CSS path
-- Update browser-tools.conf and test `./chat-with-chat.sh <system> "test"`
-
 ## Files
 
-- **chat-with-chat.sh** — Main dispatcher (51 lines)
+- **chat-with-chat.sh** — Main dispatcher (61 lines)
+- **chat-health-check.sh** — Precondition verifier (111 lines)
 - **chat-send.sh** — Generic send (81 lines, config-driven)
 - **chat-wait.sh** — Generic wait/extract (74 lines, config-driven)
 - **chat-ensure-tab.js** — Tab verification (98 lines, JSON output)

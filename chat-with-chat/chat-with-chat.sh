@@ -28,8 +28,12 @@ echo "$PROMPT" > "$PROMPT_FILE"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] CHAT START → $SYSTEM" | tee -a "$AUDIT_LOG"
 
-# 1. Launch Chrome if needed
-./browser-launch.sh
+# 1. Health check (optional but recommended)
+if ! ./chat-health-check.sh "$SYSTEM" 2>&1 | tail -3; then
+  echo ""
+  echo "⚠️  Health check found issues. Continuing anyway..."
+  echo "    (Run ./chat-health-check.sh $SYSTEM for details)"
+fi
 
 # 2. Send message
 echo "Sending to $SYSTEM..."
