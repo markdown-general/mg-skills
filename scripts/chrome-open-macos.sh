@@ -2,27 +2,34 @@
 # chrome-open-macos.sh — Launch Chrome on macOS with CDP enabled
 # Usage: chrome-open-macos.sh [--profile]
 #
-# Checks if Chrome is already running. If not, launches it.
-# Waits for CDP port 9222 to be ready before returning.
+# Chrome 136+ requires non-default data directory for remote debugging.
+# --profile: Copy your actual Chrome profile (keeps logins/cookies)
+# (default): Use isolated debug profile (fresh session)
 
-PROFILE_FLAG=""
-if [[ "$1" == "--profile" ]]; then
-  PROFILE_FLAG="--profile"
-fi
+CHROME_BIN="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+DEBUG_PROFILE="$HOME/chrome-debug-profile"
+REAL_PROFILE="$HOME/Library/Application Support/Google/Chrome"
 
-# Check if Chrome is already running on 9222
+# Check if Chrome already running on 9222
 if curl -s http://localhost:9222/json/list > /dev/null 2>&1; then
   echo "✓ Chrome already running on :9222"
   exit 0
 fi
 
+# Setup debug profile
+mkdir -p "$DEBUG_PROFILE"
+
+if [[ "$1" == "--profile" ]]; then
+  # Copy real profile to preserve logins/cookies
+  if [[ -d "$REAL_PROFILE/Default" ]]; then
+    echo "Copying your Chrome profile (keeping logins)..."
+    cp -R "$REAL_PROFILE/Default" "$DEBUG_PROFILE/Default" 2>/dev/null || true
+  fi
+fi
+
 # Launch Chrome with remote debugging
 echo "Launching Chrome with remote debugging..."
-if [[ -n "$PROFILE_FLAG" ]]; then
-  open /Applications/Google\ Chrome.app --args --remote-debugging-port=9222 &
-else
-  open /Applications/Google\ Chrome.app --args --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-debug &
-fi
+"$CHROME_BIN" --remote-debugging-port=9222 --user-data-dir="$DEBUG_PROFILE" > /dev/null 2>&1 &
 
 # Wait for CDP port to be ready (max 10 seconds)
 for i in {1..20}; do

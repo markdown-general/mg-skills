@@ -21,20 +21,18 @@ npm install
 **macOS (recommended):**
 
 ```bash
-{baseDir}/chrome-open-macos.sh          # Fresh profile
-{baseDir}/chrome-open-macos.sh --profile # Copy user's profile (cookies, logins)
+{baseDir}/chrome-open-macos.sh
 ```
 
-Opens Chrome app and waits for CDP port `:9222` to be ready. Use `--profile` to preserve user's authentication state (cookies, logins).
+Launches Chrome with remote debugging on `:9222`. Uses persistent debug profile at `~/chrome-debug-profile`. Waits for CDP port to be ready.
 
 **Alternative (Linux/manual):**
 
 ```bash
-{baseDir}/browser-start.js              # Fresh profile
-{baseDir}/browser-start.js --profile    # Copy user's profile (cookies, logins)
+{baseDir}/browser-start.js
 ```
 
-Node.js wrapper for launching Chrome. Works cross-platform.
+Node.js wrapper for launching Chrome. Works cross-platform. Same profile location.
 
 ## Navigate
 

@@ -1,0 +1,11 @@
+node_modules/
+*.log
+.DS_Store
+~chrome-debug-profile/
+dist/
+build/
+.env
+.env.local
+*.swp
+*.swo
+*~
