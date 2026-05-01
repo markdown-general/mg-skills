@@ -49,31 +49,22 @@ for ((i=0; i<TIMEOUT/INTERVAL; i++)); do
     echo "✅ Response complete — extracting full rich response"
 
     # Extract full HTML from .standard-markdown div within the last response
-    HTML_OUTPUT=$(cd "$SCRIPT_DIR" && node -e "
-      (async () => {
-        const puppeteer = require('puppeteer-core');
-        const browser = await puppeteer.connect({ browserWSEndpoint: 'http://localhost:9222' });
-        const page = (await browser.pages())[0];
+    HTML_OUTPUT=$("$SCRIPT_DIR/browser-eval.js" "
+      (function() {
+        // Find all .font-claude-response divs (the container for Claude's responses)
+        var responseContainers = Array.from(document.querySelectorAll('.font-claude-response'));
+        var lastContainer = responseContainers[responseContainers.length - 1];
         
-        const html = await page.evaluate(() => {
-          // Find all .font-claude-response divs (the container for Claude's responses)
-          const responseContainers = Array.from(document.querySelectorAll('.font-claude-response'));
-          const lastContainer = responseContainers[responseContainers.length - 1];
-          
-          if (!lastContainer) return 'No message found';
-          
-          // Get the .standard-markdown div inside this container
-          const richContent = lastContainer.querySelector('.standard-markdown');
-          if (richContent) {
-            return richContent.innerHTML;
-          }
-          
-          return lastContainer.innerText.trim();
-        });
+        if (!lastContainer) return 'No message found';
         
-        console.log(html);
-        await browser.disconnect();
-      })();
+        // Get the .standard-markdown div inside this container
+        var richContent = lastContainer.querySelector('.standard-markdown');
+        if (richContent) {
+          return richContent.innerHTML;
+        }
+        
+        return lastContainer.innerText.trim();
+      })()
     " 2>/dev/null || echo "Extraction failed")
     
     # Convert HTML to markdown if pandoc is available
