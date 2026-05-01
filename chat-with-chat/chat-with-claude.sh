@@ -47,8 +47,8 @@ $PROMPT
 
 EOF
 
-# Send via chat-with-chat and capture only the response (suppress logging)
-RESPONSE=$("$SCRIPT_DIR/chat-with-chat.sh" claude "$PROMPT" 2>/dev/null | grep -A 10000 "^────────────────────────────────────────$" | tail -n +2 | head -n -1 || echo "Response extraction error")
+# Send via chat-with-chat and capture the response
+RESPONSE=$("$SCRIPT_DIR/chat-with-chat.sh" claude "$PROMPT" 2>&1 | tail -1)
 
 # Append response to session log
 echo "$RESPONSE" >> "$SESSION_LOG"

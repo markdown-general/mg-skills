@@ -48,31 +48,15 @@ for ((i=0; i<TIMEOUT/INTERVAL; i++)); do
   if [ "$STREAMING" = "false" ]; then
     echo "✅ Response complete — extracting full rich response"
 
-    # Extract full HTML from .standard-markdown div within the last response
-    HTML_OUTPUT=$("$SCRIPT_DIR/browser-eval.js" "
+    # Extract text from last response
+    "$SCRIPT_DIR/browser-eval.js" "
       (function() {
-        // Find all .font-claude-response divs (the container for Claude's responses)
         var responseContainers = Array.from(document.querySelectorAll('.font-claude-response'));
         var lastContainer = responseContainers[responseContainers.length - 1];
-        
         if (!lastContainer) return 'No message found';
-        
-        // Get the .standard-markdown div inside this container
-        var richContent = lastContainer.querySelector('.standard-markdown');
-        if (richContent) {
-          return richContent.innerHTML;
-        }
-        
         return lastContainer.innerText.trim();
       })()
-    " 2>/dev/null || echo "Extraction failed")
-    
-    # Convert HTML to markdown if pandoc is available
-    if command -v pandoc &> /dev/null && [ "$HTML_OUTPUT" != "No message found" ]; then
-      echo "$HTML_OUTPUT" | pandoc -f html -t markdown > "$OUTPUT_FILE"
-    else
-      echo "$HTML_OUTPUT" > "$OUTPUT_FILE"
-    fi
+    " > "$OUTPUT_FILE"
 
     cp "$OUTPUT_FILE" "$HOME/mg/logs/${SYSTEM}-response-$(date +%s).txt"
 
