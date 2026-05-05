@@ -49,9 +49,13 @@ for ((i=0; i<TIMEOUT/INTERVAL; i++)); do
     echo "✅ Response complete — extracting full rich response"
 
     # Extract text from last response
+    RESPONSE_SELECTOR_VAR="${SYSTEM_UPPER}_RESPONSE_SELECTOR"
+    RESPONSE_SELECTOR="${!RESPONSE_SELECTOR_VAR}"
+    [ -z "$RESPONSE_SELECTOR" ] && RESPONSE_SELECTOR=".font-claude-response"
+    
     "$SCRIPT_DIR/browser-eval.js" "
       (function() {
-        var responseContainers = Array.from(document.querySelectorAll('.font-claude-response'));
+        var responseContainers = Array.from(document.querySelectorAll('$RESPONSE_SELECTOR'));
         var lastContainer = responseContainers[responseContainers.length - 1];
         if (!lastContainer) return 'No message found';
         return lastContainer.innerText.trim();
