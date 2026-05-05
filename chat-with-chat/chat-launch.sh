@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-PROFILE_DIR="$HOME/chrome-debug-profile"
+PROFILE_DIR="$HOME/.local/share/chrome-debug-profile"
 PORT=9222
 
 # Check if already running

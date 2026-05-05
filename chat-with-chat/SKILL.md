@@ -23,7 +23,7 @@ Automate conversations with web-based AI chat systems (Grok, Claude.ai, etc.) vi
 ./chat-launch.sh
 ```
 
-Opens Chrome with a persistent debug profile at `~/chrome-debug-profile`. Waits for CDP port `:9222` to be ready. This is the **only** Chrome instance this tool can reach.
+Opens Chrome with a persistent debug profile at `~/.local/share/chrome-debug-profile`. Waits for CDP port `:9222` to be ready. This is the **only** Chrome instance this tool can reach.
 
 ### 2. Navigate to your chat system
 

@@ -20,7 +20,7 @@ async function ensureTab(pattern) {
       console.error('\nTip: Start Chrome with remote debugging enabled:');
       console.error('  /Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome \\');
       console.error('    --remote-debugging-port=9222 \\');
-      console.error('    --user-data-dir=$HOME/chrome-debug-profile');
+      console.error('    --user-data-dir=$HOME/.local/share/chrome-debug-profile');
       process.exit(1);
     }
 
